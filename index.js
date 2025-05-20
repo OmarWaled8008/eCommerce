@@ -10,7 +10,7 @@ dotenv.config();
 const app = express();
 app.use(cors())
 
-const port = 6060;
+const port = process.env.PORT || 5000;
 app.post('/webhook', express.raw({type: 'application/json'}),createOnlineOrder );
 app.use(express.json());
 app.use(morgan("dev"));

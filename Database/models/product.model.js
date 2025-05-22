@@ -71,18 +71,6 @@ const productSchema = new Schema(
   { timestamps: true ,toJSON: { virtuals: true },toObject: { virtuals: true } }
 );
 
-productSchema.post('init',function(doc){
-
-  if(doc.imgCover && doc.images){
-
-    doc.imgCover = `${process.env.BASE_URL}products/${doc.imgCover}`
-    doc.images = doc.images.map((ele)=>{
-     return `${process.env.BASE_URL}products/${ele}`
-    })
-  }
-
-  
-})
 
 productSchema.virtual('reviews', {
   ref: 'review',

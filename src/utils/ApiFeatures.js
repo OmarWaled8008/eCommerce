@@ -30,7 +30,7 @@ export class ApiFeatures {
     // console.log(filterObj);
 
     filterObj = filterObj.replace(
-      /\b(gt|gte|lt|lte)\b/g,
+      /\b(gt|gte|lt|lte|eq)\b/g,
       (match) => `$${match}`
     );
     filterObj = JSON.parse(filterObj);

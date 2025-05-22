@@ -125,9 +125,6 @@ npm start
 - DELETE `/wishlist`: Remove from wishlist (user).
 - GET `/wishlist`: Get all items in a user's wishlist.
 
-
-We are really grateful to <a href="https://github.com/AbdeIkader">Abdelrahman Abdelkader</a> who created this backend project that we customaize it to meet our need and you can find his contacts below
-
 ## Contributing
 
 Contributions are welcome! Please fork the repository and open a pull request with your features or fixes.
@@ -139,3 +136,7 @@ This project is licensed under the ISC License. See the LICENSE file for details
 ## Contact
 
 Questions or feedback? Contact me at abdelrahmanabdelkader2002@gmail.com
+
+##
+
+We are really grateful to <a href="https://github.com/AbdeIkader">Abdelrahman Abdelkader</a> who created this backend project that we customaize it to meet our need and you can find his contacts

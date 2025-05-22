@@ -126,7 +126,7 @@ npm start
 - GET `/wishlist`: Get all items in a user's wishlist.
 
 
-# We are really grateful to <a href="https://github.com/AbdeIkader">Abdelrahman Abdelkader</a> who created this backend project that we customaize it to meet our need and you can find his contacts below
+We are really grateful to <a href="https://github.com/AbdeIkader">Abdelrahman Abdelkader</a> who created this backend project that we customaize it to meet our need and you can find his contacts below
 
 ## Contributing
 

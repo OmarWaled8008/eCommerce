@@ -27,10 +27,13 @@ const getAllProducts = catchAsyncError(async (req, res, next) => {
     .sort();
   const PAGE_NUMBER = apiFeature.queryString.page * 1 || 1;
   const getAllProducts = await apiFeature.mongooseQuery;
-
-  res
-    .status(201)
-    .json({ page: PAGE_NUMBER, message: "success", getAllProducts });
+  const totalProducts = await productModel.countDocuments();
+  res.status(201).json({
+    page: PAGE_NUMBER,
+    message: "success",
+    getAllProducts,
+    totalProducts,
+  });
 });
 const getSpecificProduct = catchAsyncError(async (req, res, next) => {
   const { id } = req.params;

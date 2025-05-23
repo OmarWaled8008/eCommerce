@@ -38,7 +38,7 @@ const getAllProducts = catchAsyncError(async (req, res, next) => {
     data: {
       totalProducts,
       totalPages,
-       getAllProducts,
+      getAllProducts,
     },
   });
 });

@@ -39,7 +39,6 @@ const getAllProducts = catchAsyncError(async (req, res, next) => {
   const totalPages = Math.ceil(totalProducts / 20);
 
   res.status(201).json({
-    page: PAGE_NUMBER,
     message: "success",
     data: {
       page: PAGE_NUMBER,

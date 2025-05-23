@@ -19,9 +19,13 @@ const categorySchema = new Schema(
   },
   { timestamps: true }
 );
-categorySchema.post('init',function(doc){
-  doc.Image = `${process.env.BASE_URL}category/${doc.Image}`
+categorySchema.post("init", function (doc) {
+  const urlRegex =
+    /\bhttps?:\/\/(?:www\.)?[\w\-]+(\.[\w\-]+)+([\/\w\-._~:?#[\]@!$&'()*+,;=]*)?\b/;
+  if (urlRegex.test(doc.Image)) {
+    return;
+  }
+  doc.Image = `${process.env.BASE_URL}category/${doc.Image}`;
   console.log(doc);
-
-})
+});
 export const categoryModel = model("category", categorySchema);

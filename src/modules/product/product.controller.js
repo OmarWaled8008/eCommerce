@@ -32,7 +32,6 @@ const getAllProducts = catchAsyncError(async (req, res, next) => {
     page: PAGE_NUMBER,
     message: "success",
     getAllProducts,
-    totalProducts,
   });
 });
 const getSpecificProduct = catchAsyncError(async (req, res, next) => {

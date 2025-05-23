@@ -19,7 +19,10 @@ const addProduct = catchAsyncError(async (req, res, next) => {
 });
 
 const getAllProducts = catchAsyncError(async (req, res, next) => {
-  let apiFeature = new ApiFeatures(productModel.find(), req.query)
+  let apiFeature = new ApiFeatures(
+    productModel.find().populate("brand category subcategory"),
+    req.query
+  )
     .pagination()
     .fields()
     .filteration()

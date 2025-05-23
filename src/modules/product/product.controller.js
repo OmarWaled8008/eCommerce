@@ -29,11 +29,17 @@ const getAllProducts = catchAsyncError(async (req, res, next) => {
     .search()
     .sort();
   const PAGE_NUMBER = apiFeature.queryString.page * 1 || 1;
+  const totalProducts = await productModel.countDocuments();
+  const totalPages = Math.ceil(totalProducts / 20);
   const getAllProducts = await apiFeature.mongooseQuery;
   res.status(201).json({
     page: PAGE_NUMBER,
     message: "success",
-    getAllProducts,
+    data: {
+      totalProducts,
+      totalPages,
+       getAllProducts,
+    },
   });
 });
 const getSpecificProduct = catchAsyncError(async (req, res, next) => {

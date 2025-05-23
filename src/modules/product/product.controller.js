@@ -27,7 +27,6 @@ const getAllProducts = catchAsyncError(async (req, res, next) => {
     .sort();
   const PAGE_NUMBER = apiFeature.queryString.page * 1 || 1;
   const getAllProducts = await apiFeature.mongooseQuery;
-  const totalProducts = await productModel.countDocuments();
   res.status(201).json({
     page: PAGE_NUMBER,
     message: "success",

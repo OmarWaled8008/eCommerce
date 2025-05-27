@@ -8,7 +8,7 @@ dotenv.config();
 
 import Stripe from "stripe";
 import { userModel } from "../../../Database/models/user.model.js";
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
 const createCashOrder = catchAsyncError(async (req, res, next) => {
   let cart = await cartModel.findById(req.params.id);
@@ -52,7 +52,7 @@ const getSpecificOrder = catchAsyncError(async (req, res, next) => {
 
   let order = await orderModel
     .findOne({ userId: req.user._id })
-    .populate("cartItems.productId");
+    .populate("cartItem.productId");
 
   res.status(200).json({ message: "success", order });
 });
@@ -107,7 +107,7 @@ const createOnlineOrder = catchAsyncError(async (request, response) => {
     event = stripe.webhooks.constructEvent(
       request.body,
       sig,
-      "whsec_fcatGuOKvXYUQoz5NWSwH9vaqdWXIWsI"
+      process.env.STRIPE_WEBHOOK_SECRET
     );
   } catch (err) {
     return response.status(400).send(`Webhook Error: ${err.message}`);
@@ -126,10 +126,12 @@ const createOnlineOrder = catchAsyncError(async (request, response) => {
 
 async function card(e, res) {
   let cart = await cartModel.findById(e.client_reference_id);
-
-  if (!cart) return next(new AppError("Cart was not found", 404));
+  if (!cart) {
+    return res.status(404).json({ message: "Cart was not found" });
+  }
 
   let user = await userModel.findOne({ email: e.customer_email });
+
   const order = new orderModel({
     userId: user._id,
     cartItem: cart.cartItem,
@@ -142,23 +144,17 @@ async function card(e, res) {
 
   await order.save();
 
-  // console.log(order);
-  if (order) {
-    let options = cart.cartItem.map((item) => ({
-      updateOne: {
-        filter: { _id: item.productId },
-        update: { $inc: { quantity: -item.quantity, sold: item.quantity } },
-      },
-    }));
+  let options = cart.cartItem.map((item) => ({
+    updateOne: {
+      filter: { _id: item.productId },
+      update: { $inc: { quantity: -item.quantity, sold: item.quantity } },
+    },
+  }));
 
-    await productModel.bulkWrite(options);
+  await productModel.bulkWrite(options);
+  await cartModel.findOneAndDelete({ userId: user._id });
 
-    await cartModel.findOneAndDelete({ userId: user._id });
-
-    return res.status(201).json({ message: "success", order });
-  } else {
-    next(new AppError("Error in cart ID", 404));
-  }
+  return res.status(201).json({ message: "success", order });
 }
 
 export {

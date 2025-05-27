@@ -3,21 +3,21 @@ import { dbConnection } from "./Database/dbConnection.js";
 import { bootstrap } from "./src/bootstrap.js";
 import dotenv from "dotenv";
 import morgan from "morgan";
-import cors from 'cors'
-import { createOnlineOrder } from "./src/modules/order/order.controller.js";
+import cors from "cors";
+import paymentRouter from "./src/modules/order/payment.router.js";
 
 dotenv.config();
 const app = express();
-app.use(cors())
+app.use(cors());
 
 const port = process.env.PORT || 5000;
-app.post('/webhook', express.raw({type: 'application/json'}),createOnlineOrder );
+app.use("/webhook", paymentRouter);
 app.use(express.json());
 app.use(morgan("dev"));
 app.use(express.static("uploads"));
 
-
-
 bootstrap(app);
 dbConnection();
-app.listen(process.env.PORT || port, () => console.log(`Example app listening on port ${port}!`));
+app.listen(process.env.PORT || port, () =>
+  console.log(`Example app listening on port ${port}!`)
+);

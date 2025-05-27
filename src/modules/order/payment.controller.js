@@ -58,6 +58,8 @@ export const createCheckOutSession = async (req, res) => {
 };
 
 export const webHookHandler = async (req, res) => {
+  console.log("Webhook handler called");
+  console.log("Raw body:", req.body.toString());
   const sig = req.headers["stripe-signature"];
   let event;
 
@@ -67,6 +69,12 @@ export const webHookHandler = async (req, res) => {
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
+    console.log("Stripe event verified:", event.type);
+
+    if (event.type === "checkout.session.completed") {
+      console.log("Checkout session completed event received");
+    }
+    res.status(200).json({ received: true });
   } catch (err) {
     console.error("Webhook signature verification failed:", err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);

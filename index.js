@@ -10,13 +10,9 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 5000;
 
-// app.post("/webhook", express.raw({ type: "application/json" }), webHookHandler);
-app.post("/webhook", express.raw({ type: "application/json" }), (req, res) => {
-  console.log("Webhook route hit");
-  res.status(200).send("ok");
-});
-app.use(cors());
+app.post("/webhook", express.raw({ type: "application/json" }), webHookHandler);
 
+app.use(cors());
 
 app.use(express.json());
 app.use(morgan("dev"));

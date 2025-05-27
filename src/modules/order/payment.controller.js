@@ -5,6 +5,7 @@ import { orderModel } from "../../../Database/models/order.model.js";
 
 dotenv.config({ path: "../../../.env" });
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+console.log(process.env.STRIPE_WEBHOOK_SECRET);
 
 export const createCheckOutSession = async (req, res) => {
   try {

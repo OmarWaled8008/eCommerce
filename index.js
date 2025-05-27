@@ -4,13 +4,13 @@ import { bootstrap } from "./src/bootstrap.js";
 import dotenv from "dotenv";
 import morgan from "morgan";
 import cors from "cors";
-import { webHookHandler } from "./src/modules/order/payment.controller.js";
+import webhookRouter from "./src/modules/webhook/webhook.js";
 
 dotenv.config();
 const app = express();
 const port = process.env.PORT || 5000;
 
-app.post("/webhook", express.raw({ type: "application/json" }), webHookHandler);
+app.use("/webhook", webhookRouter);
 
 app.use(cors());
 

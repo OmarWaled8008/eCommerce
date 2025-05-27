@@ -60,8 +60,10 @@ export const createCheckOutSession = async (req, res) => {
 
 export const webHookHandler = async (req, res) => {
   console.log("Webhook handler called");
-  console.log("Raw body:", req.body.toString());
   const sig = req.headers["stripe-signature"];
+  console.log("Webhook hit!");
+  console.log("Stripe signature:", req.headers["stripe-signature"]);
+  console.log("Body:", req.body.toString());
   let event;
 
   try {

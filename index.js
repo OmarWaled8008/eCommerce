@@ -15,6 +15,7 @@ app.use("/webhook", webhookRouter);
 app.use(cors());
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 app.use(express.static("uploads"));
 

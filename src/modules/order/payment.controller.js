@@ -37,6 +37,8 @@ export const createCheckOutSession = async (req, res) => {
       mode: "payment",
       success_url: `${process.env.CLIENT_URL}/products`,
       cancel_url: `${process.env.CLIENT_URL}/products`,
+      customer_email: req.user.email,
+      client_reference_id: req.user._id.toString(),
       metadata: {
         userId: userId,
         cartId: cart._id.toString(),
@@ -72,6 +74,8 @@ export const webHookHandler = async (req, res) => {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
+    const clientRefId = session.client_reference_id;
+    const customerEmail = session.customer_email;
     const userId = session.metadata.userId;
     const cartId = session.metadata.cartId;
     console.log("Webhook received for session:", session.id);

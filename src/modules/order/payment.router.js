@@ -9,11 +9,5 @@ router.post(
   allowedTo("user"),
   createCheckOutSession
 );
-
-router.post(
-  "/",
-  express.raw({ type: "application/json" }),
-  webHookHandler
-);
   
 export default router;

@@ -1,11 +1,17 @@
 import multer from "multer";
 import { v4 as uuidv4 } from "uuid";
 import { AppError } from "../src/utils/AppError.js";
-
+import fs from "fs";
 const createMulterUploader = (folderName) => {
   const storage = multer.diskStorage({
     destination: (req, file, cb) => {
       // console.log(file);
+      fs.mkdir(`uploads/${folderName}`, { recursive: true }, (err) => {
+        if (err) {
+          return cb(err);
+        }
+        // cb(null, uploadPath);
+      });
       cb(null, `uploads/${folderName}`);
     },
     filename: (req, file, cb) => {

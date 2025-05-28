@@ -77,19 +77,19 @@ const productSchema = new Schema(
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
-productSchema.post("init", function (doc) {
-  const urlRegex =
+productSchema.post('init',function(doc){
+   const urlRegex =
     /\bhttps?:\/\/(?:www\.)?[\w\-]+(\.[\w\-]+)+([\/\w\-._~:?#[\]@!$&'()*+,;=]*)?\b/;
-  if (urlRegex.test(doc.Image)) {
+  if (urlRegex.test(doc.imgCover)) {
     return;
   }
-  if (doc.imgCover && doc.images) {
-    doc.imgCover = `${process.env.BASE_URL}products/${doc.imgCover}`;
-    doc.images = doc.images.map((ele) => {
-      return `${process.env.BASE_URL}products/${ele}`;
-    });
+  if(doc.imgCover && doc.images){
+    doc.imgCover = `${process.env.BASE_URL}products/${doc.imgCover}`
+    doc.images = doc.images.map((ele)=>{
+     return `${process.env.BASE_URL}products/${ele}`
+    })
   }
-});
+})
 
 productSchema.virtual("reviews", {
   ref: "review",

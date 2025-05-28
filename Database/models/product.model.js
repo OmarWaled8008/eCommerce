@@ -80,16 +80,15 @@ const productSchema = new Schema(
 productSchema.post("init", function (doc) {
   const urlRegex =
     /\bhttps?:\/\/(?:www\.)?[\w\-]+(\.[\w\-]+)+([\/\w\-._~:?#[\]@!$&'()*+,;=]*)?\b/;
-  if (urlRegex.test(doc.imgCover)) {
+  if (urlRegex.test(doc.Image)) {
     return;
   }
-  doc.imgCover = `${process.env.BASE_URL}/product/${doc.imgCover}`;
-  doc.images = doc.images.map((img) => {
-    if (urlRegex.test(img)) {
-      return img;
-    }
-    return `${process.env.BASE_URL}/product/${img}`;
-  });
+  if (doc.imgCover && doc.images) {
+    doc.imgCover = `${process.env.BASE_URL}products/${doc.imgCover}`;
+    doc.images = doc.images.map((ele) => {
+      return `${process.env.BASE_URL}products/${ele}`;
+    });
+  }
 });
 
 productSchema.virtual("reviews", {

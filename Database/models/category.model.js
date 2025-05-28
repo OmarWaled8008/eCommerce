@@ -25,7 +25,7 @@ categorySchema.post("init", function (doc) {
   if (urlRegex.test(doc.Image)) {
     return;
   }
-  doc.Image = `${process.env.BASE_URL}category/${doc.Image}`;
+  doc.Image = `${process.env.BASE_URL}/category/${doc.Image}`;
   console.log(doc);
 });
 export const categoryModel = model("category", categorySchema);

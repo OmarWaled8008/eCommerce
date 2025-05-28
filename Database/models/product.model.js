@@ -28,6 +28,12 @@ const productSchema = new Schema(
       min: 0,
       required: true,
     },
+    discount: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100,
+    },
     priceAfterDiscount: {
       type: Number,
       default: 0,
@@ -70,6 +76,21 @@ const productSchema = new Schema(
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
+
+productSchema.post("init", function (doc) {
+  const urlRegex =
+    /\bhttps?:\/\/(?:www\.)?[\w\-]+(\.[\w\-]+)+([\/\w\-._~:?#[\]@!$&'()*+,;=]*)?\b/;
+  if (urlRegex.test(doc.imgCover)) {
+    return;
+  }
+  doc.imgCover = `${process.env.BASE_URL}/product/${doc.imgCover}`;
+  doc.images = doc.images.map((img) => {
+    if (urlRegex.test(img)) {
+      return img;
+    }
+    return `${process.env.BASE_URL}/product/${img}`;
+  });
+});
 
 productSchema.virtual("reviews", {
   ref: "review",

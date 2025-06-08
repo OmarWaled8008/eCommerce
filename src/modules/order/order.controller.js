@@ -94,10 +94,10 @@ const createCheckOutSession = catchAsyncError(async (req, res, next) => {
       mode: "payment",
       success_url: `${process.env.CLIENT_URL}/products`,
       cancel_url: `${process.env.CLIENT_URL}/products`,
-      customer_email: req.user.email,
-      client_reference_id: req.user._id.toString(),
+      customer_email: req.user.email, // ✅ Real user email
+      client_reference_id: req.user._id.toString(), // ✅ Will help in webhook
       metadata: {
-        userId: userId,
+        userId: req.user._id.toString(),
         cartId: cart._id.toString(),
         totalPriceAfterDiscount: (cart.totalPriceAfterDiscount || 0).toString(),
         totalPrice: cart.totalPrice.toString(),
@@ -107,38 +107,41 @@ const createCheckOutSession = catchAsyncError(async (req, res, next) => {
       },
     });
 
-    res.status(200).json({ message: "success", url: session.url });
+    res.status(200).json({ message: "success", session });
   } catch (error) {
     console.error("Error in createCheckOutSession:", error);
     res.status(500).json({ message: "Server error" });
   }
 });
 
-const createOnlineOrder = catchAsyncError(async (request, response) => {
-  const sig = request.headers["stripe-signature"];
+console.log(process.env.STRIPE_WEBHOOK_SECRET);
+
+const createOnlineOrder = catchAsyncError(async (req, res) => {
+  const sig = req.headers["stripe-signature"];
 
   let event;
-
   try {
     event = stripe.webhooks.constructEvent(
-      request.body,
+      req.body,
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
+    console.log("✅ Stripe event verified:", event.type);
   } catch (err) {
-    console.error("Webhook signature verification failed:", err.message);
-    return response.status(400).send(`Webhook Error: ${err.message}`);
+    console.error("❌ Stripe webhook error:", err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
   if (event.type === "checkout.session.completed") {
-    console.log("✅ Checkout session completed");
-    await card(event.data.object);
-  } else {
-    console.log(`❌ Unhandled event type: ${event.type}`);
+    const session = event.data.object;
+    console.log(
+      "✅ Handling checkout.session.completed for:",
+      session.customer_email
+    );
+    await card(session);
   }
 
-  // Respond to Stripe to acknowledge receipt of the event
-  response.status(200).send();
+  res.status(200).send(); // Respond to Stripe
 });
 
 //https://ecommerce-backend-codv.onrender.com/api/v1/orders/checkOut/6536c48750fab46f309bb950
@@ -146,13 +149,13 @@ const createOnlineOrder = catchAsyncError(async (request, response) => {
 async function card(session) {
   const user = await userModel.findOne({ email: session.customer_email });
   if (!user) {
-    console.error("User not found by email:", session.customer_email);
+    console.error("❌ User not found by email:", session.customer_email);
     return;
   }
 
   const cart = await cartModel.findOne({ userId: session.client_reference_id });
   if (!cart) {
-    console.error("Cart not found for user:", session.client_reference_id);
+    console.error("❌ Cart not found for user:", session.client_reference_id);
     return;
   }
 

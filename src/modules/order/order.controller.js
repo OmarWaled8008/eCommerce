@@ -64,42 +64,58 @@ const getAllOrders = catchAsyncError(async (req, res, next) => {
 });
 
 const createCheckOutSession = catchAsyncError(async (req, res, next) => {
-  let cart = await cartModel.findById(req.params.id);
-  if (!cart) return next(new AppError("Cart was not found", 404));
+  try {
+    const userId = req.user._id;
+    const { shippingStreet, shippingCity, shippingPhone } = req.body;
 
-  console.log(cart);
+    const cart = await cartModel
+      .findOne({ userId })
+      .populate("cartItem.productId");
 
-  // console.log(cart);
-  let totalOrderPrice = cart.totalPriceAfterDiscount
-    ? cart.totalPriceAfterDiscount
-    : cart.totalPrice;
+    if (!cart || cart.cartItem.length === 0) {
+      return res.status(404).json({ message: "Cart not found or empty" });
+    }
 
-  let sessions = await stripe.checkout.sessions.create({
-    line_items: [
-      {
-        price_data: {
-          currency: "egp",
-          unit_amount: totalOrderPrice * 100,
-          product_data: {
-            name: req.user.name,
-          },
+    const line_items = cart.cartItem.map((item) => ({
+      price_data: {
+        currency: "egp",
+        product_data: {
+          name: item.productId.title,
+          images: [item.productId.imgCover],
         },
-        quantity: 1,
+        unit_amount: item.productId.price * 100,
       },
-    ],
-    mode: "payment",
-    success_url: "https://github.com/AbdeIkader",
-    cancel_url: "https://www.linkedin.com/in/abdelrahman-abdelkader-259781215/",
-    customer_email: req.user.email,
-    client_reference_id: req.params.id,
-    metadata: req.body.shippingAddress,
-  });
+      quantity: item.quantity,
+    }));
 
-  res.json({ message: "success", sessions });
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items,
+      mode: "payment",
+      success_url: `${process.env.CLIENT_URL}/products`,
+      cancel_url: `${process.env.CLIENT_URL}/products`,
+      customer_email: req.user.email,
+      client_reference_id: req.user._id.toString(),
+      metadata: {
+        userId: userId,
+        cartId: cart._id.toString(),
+        totalPriceAfterDiscount: (cart.totalPriceAfterDiscount || 0).toString(),
+        totalPrice: cart.totalPrice.toString(),
+        shippingStreet: shippingStreet || "",
+        shippingCity: shippingCity || "",
+        shippingPhone: shippingPhone || "",
+      },
+    });
+
+    res.status(200).json({ message: "success", url: session.url });
+  } catch (error) {
+    console.error("Error in createCheckOutSession:", error);
+    res.status(500).json({ message: "Server error" });
+  }
 });
 
 const createOnlineOrder = catchAsyncError(async (request, response) => {
-  const sig = request.headers["stripe-signature"].toString();
+  const sig = request.headers["stripe-signature"];
 
   let event;
 
@@ -110,33 +126,45 @@ const createOnlineOrder = catchAsyncError(async (request, response) => {
       process.env.STRIPE_WEBHOOK_SECRET
     );
   } catch (err) {
+    console.error("Webhook signature verification failed:", err.message);
     return response.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  // Handle the event
-  if (event.type == "checkout.session.completed") {
-    // const checkoutSessionCompleted = event.data.object;
-    card(event.data.object, response);
+  if (event.type === "checkout.session.completed") {
+    console.log("✅ Checkout session completed");
+    await card(event.data.object);
   } else {
-    console.log(`Unhandled event type ${event.type}`);
+    console.log(`❌ Unhandled event type: ${event.type}`);
   }
+
+  // Respond to Stripe to acknowledge receipt of the event
+  response.status(200).send();
 });
 
 //https://ecommerce-backend-codv.onrender.com/api/v1/orders/checkOut/6536c48750fab46f309bb950
 
-async function card(e, res) {
-  let cart = await cartModel.findById(e.client_reference_id);
-  if (!cart) {
-    return res.status(404).json({ message: "Cart was not found" });
+async function card(session) {
+  const user = await userModel.findOne({ email: session.customer_email });
+  if (!user) {
+    console.error("User not found by email:", session.customer_email);
+    return;
   }
 
-  let user = await userModel.findOne({ email: e.customer_email });
+  const cart = await cartModel.findOne({ userId: session.client_reference_id });
+  if (!cart) {
+    console.error("Cart not found for user:", session.client_reference_id);
+    return;
+  }
 
   const order = new orderModel({
     userId: user._id,
     cartItem: cart.cartItem,
-    totalOrderPrice: e.amount_total / 100,
-    shippingAddress: e.metadata.shippingAddress,
+    totalOrderPrice: session.amount_total / 100,
+    shippingAddress: {
+      street: session.metadata.shippingStreet,
+      city: session.metadata.shippingCity,
+      phone: session.metadata.shippingPhone,
+    },
     paymentMethod: "card",
     isPaid: true,
     paidAt: Date.now(),
@@ -144,17 +172,17 @@ async function card(e, res) {
 
   await order.save();
 
-  let options = cart.cartItem.map((item) => ({
+  const bulkUpdate = cart.cartItem.map((item) => ({
     updateOne: {
       filter: { _id: item.productId },
       update: { $inc: { quantity: -item.quantity, sold: item.quantity } },
     },
   }));
 
-  await productModel.bulkWrite(options);
+  await productModel.bulkWrite(bulkUpdate);
   await cartModel.findOneAndDelete({ userId: user._id });
 
-  return res.status(201).json({ message: "success", order });
+  console.log("✅ Order created successfully:", order._id);
 }
 
 export {

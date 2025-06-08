@@ -4,23 +4,22 @@ import { bootstrap } from "./src/bootstrap.js";
 import dotenv from "dotenv";
 import morgan from "morgan";
 import cors from "cors";
-import webhookRouter from "./src/modules/webhook/webhook.js";
+import { createOnlineOrder } from "./src/modules/order/order.controller.js";
 
 dotenv.config();
+
+const PORT = process.env.PORT || 5000;
 const app = express();
-const port = process.env.PORT || 5000;
-
-app.use("/webhook", webhookRouter);
-
+app.post(
+  "/webhook",
+  express.raw({ type: "application/json" }),
+  createOnlineOrder
+);
 app.use(cors());
-
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 app.use(express.static("uploads"));
 
 bootstrap(app);
 dbConnection();
-app.listen(process.env.PORT || port, () =>
-  console.log(`Example app listening on port ${port}!`)
-);
+app.listen(PORT, () => console.log(`http://localhost:${PORT}`));

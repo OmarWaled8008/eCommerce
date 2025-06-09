@@ -6,25 +6,21 @@ import { dbConnection } from "./Database/dbConnection.js";
 import { bootstrap } from "./src/bootstrap.js";
 import { createOnlineOrder } from "./src/modules/order/order.controller.js";
 
-// Config
 dotenv.config();
 const PORT = process.env.PORT || 5000;
 const app = express();
 
-// ✅ Stripe Webhook Route (needs raw body)
 app.post(
   "/webhook",
   express.raw({ type: "application/json" }),
   createOnlineOrder
 );
 
-// ✅ Middleware after webhook
 app.use(cors());
-app.use(express.json()); // This comes *after* webhook
+app.use(express.json());
 app.use(morgan("dev"));
 app.use(express.static("uploads"));
 
-// Bootstrap app & DB
 bootstrap(app);
 dbConnection();
 

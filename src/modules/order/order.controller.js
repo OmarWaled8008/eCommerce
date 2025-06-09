@@ -13,6 +13,8 @@ const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const createCashOrder = catchAsyncError(async (req, res, next) => {
   let cart = await cartModel.findById(req.params.id);
 
+  if (!cart) return next(new AppError("Cart not found", 404));
+
   // console.log(cart);
   let totalOrderPrice = cart.totalPriceAfterDiscount
     ? cart.totalPriceAfterDiscount
@@ -50,15 +52,15 @@ const createCashOrder = catchAsyncError(async (req, res, next) => {
 const getSpecificOrder = catchAsyncError(async (req, res, next) => {
   console.log(req.user._id);
 
-  let order = await orderModel
-    .findOne({ userId: req.user._id })
+  let orders = await orderModel
+    .find({ userId: req.user._id })
     .populate("cartItem.productId");
 
   res.status(200).json({ message: "success", order });
 });
 
 const getAllOrders = catchAsyncError(async (req, res, next) => {
-  let orders = await orderModel.findOne({}).populate("cartItems.productId");
+  let orders = await orderModel.find({}).populate("cartItem.productId");
 
   res.status(200).json({ message: "success", orders });
 });

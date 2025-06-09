@@ -15,7 +15,6 @@ const createCashOrder = catchAsyncError(async (req, res, next) => {
 
   if (!cart) return next(new AppError("Cart not found", 404));
 
-  // console.log(cart);
   let totalOrderPrice = cart.totalPriceAfterDiscount
     ? cart.totalPriceAfterDiscount
     : cart.totalPrice;
@@ -96,8 +95,8 @@ const createCheckOutSession = catchAsyncError(async (req, res, next) => {
       mode: "payment",
       success_url: `${process.env.CLIENT_URL}/products`,
       cancel_url: `${process.env.CLIENT_URL}/products`,
-      customer_email: req.user.email, // ✅ Real user email
-      client_reference_id: req.user._id.toString(), // ✅ Will help in webhook
+      customer_email: req.user.email,
+      client_reference_id: req.user._id.toString(),
       metadata: {
         userId: req.user._id.toString(),
         cartId: cart._id.toString(),
@@ -128,9 +127,9 @@ const createOnlineOrder = catchAsyncError(async (req, res) => {
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
-    console.log("✅ Stripe event verified:", event.type);
+    console.log("Stripe event verified:", event.type);
   } catch (err) {
-    console.error("❌ Stripe webhook error:", err.message);
+    console.error("Stripe webhook error:", err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
@@ -151,13 +150,13 @@ const createOnlineOrder = catchAsyncError(async (req, res) => {
 async function card(session) {
   const user = await userModel.findOne({ email: session.customer_email });
   if (!user) {
-    console.error("❌ User not found by email:", session.customer_email);
+    console.error("User not found by email:", session.customer_email);
     return;
   }
 
   const cart = await cartModel.findOne({ userId: session.client_reference_id });
   if (!cart) {
-    console.error("❌ Cart not found for user:", session.client_reference_id);
+    console.error("Cart not found for user:", session.client_reference_id);
     return;
   }
 
@@ -187,7 +186,7 @@ async function card(session) {
   await productModel.bulkWrite(bulkUpdate);
   await cartModel.findOneAndDelete({ userId: user._id });
 
-  console.log("✅ Order created successfully:", order._id);
+  console.log("Order created successfully:", order._id);
 }
 
 export {
